@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>ReelReserve | Movies</title><link rel="stylesheet" href="/css/styles.css">
+</head>
+<body data-page="home">
+<div th:replace="~{fragments/nav :: navigation}"></div>
+<main class="container">
+    <section class="hero"><p class="eyebrow">YOUR NEXT NIGHT OUT</p><h1>Find a seat for a great story.</h1>
+        <p>Browse now showing movies and reserve your seats in a few simple steps.</p></section>
+    <section><div class="section-heading"><div><p class="eyebrow">NOW SHOWING</p><h2>Movies</h2></div></div>
+        <div id="movie-grid" class="movie-grid"><p class="muted">Loading movies…</p></div></section>
+</main>
+<script src="/js/app.js" defer></script>
+</body></html>

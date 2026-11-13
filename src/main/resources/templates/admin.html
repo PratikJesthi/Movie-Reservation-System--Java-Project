@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin | ReelReserve</title><link rel="stylesheet" href="/css/styles.css"></head>
+<body data-page="admin"><div th:replace="~{fragments/nav :: navigation}"></div>
+<main class="container narrow"><section class="form-card"><p class="eyebrow">CATALOGUE</p><h1>Add a movie</h1><p class="muted">New movies appear on the home page.</p>
+    <form id="movie-form"><label>Title<input name="title" maxlength="200" required></label>
+        <label>Description<textarea name="description" rows="4" required></textarea></label>
+        <div class="form-grid"><label>Genre<input name="genre" maxlength="100" required></label><label>Language<input name="language" maxlength="80" required></label></div>
+        <label>Duration in minutes<input name="durationMinutes" type="number" min="1" required></label>
+        <label>Poster image URL <span class="muted">(optional)</span><input name="posterUrl" type="url" maxlength="1000"></label>
+        <p id="form-message" class="form-message" role="alert"></p><button class="button" type="submit">Add movie</button></form>
+</section></main><script src="/js/app.js" defer></script></body></html>

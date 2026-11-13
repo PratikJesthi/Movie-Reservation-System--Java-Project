@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Select seats | ReelReserve</title><link rel="stylesheet" href="/css/styles.css"></head>
+<body data-page="seats" th:attr="data-show-id=${showId}">
+<div th:replace="~{fragments/nav :: navigation}"></div>
+<main class="container narrow"><a class="back-link" href="javascript:history.back()">← Back</a>
+    <section class="page-heading"><p class="eyebrow">YOUR SEATS</p><h1>Select your seats</h1><p id="seat-hint" class="muted">Choose available seats below.</p></section>
+    <div class="screen-label">SCREEN</div><div id="seat-grid" class="seat-grid"><p class="muted">Loading seats…</p></div>
+    <div class="seat-legend"><span><i class="seat-dot available"></i>Available</span><span><i class="seat-dot selected"></i>Selected</span><span><i class="seat-dot booked"></i>Booked</span></div>
+    <section class="booking-bar"><div><span class="muted">Selected</span><strong id="selection-summary">No seats</strong></div><button id="book-seats" class="button" disabled>Continue</button></section>
+</main><script src="/js/app.js" defer></script></body></html>

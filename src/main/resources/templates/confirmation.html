@@ -1,0 +1,10 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Booking confirmation | ReelReserve</title><link rel="stylesheet" href="/css/styles.css"></head>
+<body data-page="confirmation" th:attr="data-booking-id=${bookingId}">
+<div th:replace="~{fragments/nav :: navigation}"></div>
+<main class="container narrow"><section id="confirmation-card" class="confirmation-card"><div class="success-mark">✓</div>
+    <p class="eyebrow">BOOKING CONFIRMED</p><h1>Your seats are reserved.</h1><p id="confirmation-details" class="muted">Loading booking details…</p>
+    <div class="button-row"><a class="button" href="/bookings">My bookings</a><a class="button button-secondary" href="/">Browse movies</a></div></section></main>
+<script src="/js/app.js" defer></script></body></html>

@@ -1,0 +1,11 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Movie | ReelReserve</title><link rel="stylesheet" href="/css/styles.css"></head>
+<body data-page="movie" th:attr="data-movie-id=${movieId}">
+<div th:replace="~{fragments/nav :: navigation}"></div>
+<main class="container"><a class="back-link" href="/">← All movies</a>
+    <section id="movie-detail" class="movie-detail"><p class="muted">Loading movie…</p></section>
+    <section class="show-section"><p class="eyebrow">PLAN YOUR VISIT</p><h2>Showtimes</h2>
+        <div id="show-list" class="show-list"><p class="muted">Loading showtimes…</p></div></section>
+</main><script src="/js/app.js" defer></script></body></html>
