@@ -14,8 +14,8 @@
     <groupId>com.moviebooking</groupId>
     <artifactId>movie-reservation-system</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>movie-reservation-system</name>
-    <description>Beginner-friendly movie reservation prototype</description>
+    <name>CHALCHITRA</name>
+    <description>Movie reservation system built with Java and Spring Boot</description>
 
     <properties>
         <java.version>21</java.version>

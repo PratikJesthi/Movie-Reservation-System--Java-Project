@@ -135,7 +135,7 @@ public class PaymentService {
                 request.put("currency", "INR");
                 request.put("accept_partial", false);
                 request.put("reference_id", referenceId);
-                request.put("description", "ReelReserve Booking #" + booking.getId());
+                request.put("description", "CHALCHITRA Booking #" + booking.getId());
                 request.put("callback_url", appBaseUrl + "/payments/callback");
                 request.put("callback_method", "get");
 

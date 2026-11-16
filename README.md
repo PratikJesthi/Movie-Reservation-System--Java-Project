@@ -1,12 +1,11 @@
-# Movie Reservation System
+# CHALCHITRA — Movie Reservation System
 
-A beginner-friendly movie booking prototype built with Java 17, Spring Boot, Maven, Thymeleaf, and Supabase PostgreSQL. It includes a JSON REST API and a responsive server-rendered frontend that uses the Fetch API.
+A movie booking system built with Java 21, Spring Boot, Maven, Thymeleaf, and PostgreSQL/H2. It includes a JSON REST API and a responsive server-rendered frontend that uses the Fetch API.
 
 ## Requirements
 
-- Java 17 JDK
+- Java 21 JDK
 - Maven 3.8 or newer (or use the Maven wrapper if one is added later)
-- A Supabase project with a PostgreSQL database
 - Visual Studio Code
 
 ## VS Code setup
@@ -17,46 +16,33 @@ Open this folder in VS Code. Install the recommended extensions from **Extension
 - Spring Boot Extension Pack (`vmware.vscode-spring-boot`)
 - XML (`redhat.vscode-xml`)
 
-The project uses Maven, so VS Code should import `pom.xml` automatically. Select a Java 17 JDK if prompted.
+The project uses Maven, so VS Code should import `pom.xml` automatically. Select a Java 21 JDK if prompted.
 
-## Supabase database setup
+## Local database
 
-1. In the Supabase dashboard, open **SQL Editor** and create a new query.
-2. Paste the contents of [`schema.sql`](./schema.sql) and run it. It creates the tables and sample catalogue data.
-3. In **Project Settings → Database**, copy the connection details. The JDBC URL should look like `jdbc:postgresql://<host>:5432/postgres?sslmode=require`. Use the database username and password shown by Supabase. If your project uses a pooler, select its PostgreSQL connection string and make sure it uses the JDBC prefix.
-4. Set the environment variables below in the shell that will run Spring Boot. Do not commit credentials.
+The default profile uses a persistent H2 database at `./data/moviedb`. No database server or cloud account is needed. On first startup, the application creates the JPA schema and seeds sample movies, a theatre, screens, seats, and showtimes.
 
-macOS/Linux (current terminal):
-
-```bash
-export SUPABASE_DB_URL='jdbc:postgresql://<host>:5432/postgres?sslmode=require'
-export SUPABASE_DB_USER='postgres'
-export SUPABASE_DB_PASSWORD='your-database-password'
-```
-
-Windows PowerShell (current terminal):
-
-```powershell
-$env:SUPABASE_DB_URL = 'jdbc:postgresql://<host>:5432/postgres?sslmode=require'
-$env:SUPABASE_DB_USER = 'postgres'
-$env:SUPABASE_DB_PASSWORD = 'your-database-password'
-```
-
-Replace the placeholders with your Supabase connection values. `application.properties` reads these variables and sets `spring.jpa.hibernate.ddl-auto=validate`, so the schema must exist before the application starts. Spring SQL initialization is disabled because the schema is run manually in Supabase.
+The H2 console is available at [http://localhost:8080/h2-console](http://localhost:8080/h2-console). Use JDBC URL `jdbc:h2:file:./data/moviedb;MODE=PostgreSQL;DB_CLOSE_DELAY=-1`, username `sa`, and a blank password.
 
 ## Run the application
 
-From the project folder, with the environment variables set:
+Use Java 21 and Maven. For a complete local booking demonstration, enable the clearly simulated payment flow:
 
 ```bash
-mvn spring-boot:run
+APP_PAYMENT_SIMULATION=true mvn spring-boot:run
 ```
 
-Open [http://localhost:8080](http://localhost:8080). Register an account, choose a movie and showtime, select available seats, and confirm the booking.
+Open [http://localhost:8080](http://localhost:8080), register an account, choose a movie and showtime, select available seats, and complete the simulated callback. It is not a real Razorpay transaction. Without the simulation variable or Razorpay credentials, payment-link creation is disabled.
+
+The app can also use Razorpay test credentials from environment variables. Never commit credentials.
+
+## PostgreSQL / Supabase
+
+An optional `supabase` profile reads `SUPABASE_DB_URL`, `SUPABASE_DB_USER`, and `SUPABASE_DB_PASSWORD`, and expects the database schema to already match all JPA entities. **The checked-in `schema.sql` is currently behind the application model** and is missing payment and ticket/hold columns. Do not use it to create a new Supabase database until it has been updated and verified.
 
 ### Administrator account
 
-Public registration always creates a regular `USER`. To use the admin page, register normally, then promote that account from the Supabase SQL Editor (replace the email):
+Public registration always creates a regular `USER`. To use the admin page in the local H2 demo, register normally, open the H2 console, and promote that account (replace the email):
 
 ```sql
 UPDATE users SET role = 'ADMIN' WHERE email = 'admin@example.com';
@@ -114,12 +100,12 @@ src/main/resources/
 ├── static/css/          # Responsive styles
 ├── static/js/           # Fetch API and page behavior
 └── templates/           # Thymeleaf pages
-src/test/java/           # Booking service unit tests
+src/test/java/           # Service, repository, controller, and ticket tests
 ```
 
 ## Tests
 
-The booking service tests cover successful booking, rejecting an already-booked seat, and cancellation. Run them with:
+The repository currently contains 31 JUnit test methods covering booking, payment callbacks, ticket QR/verification, persistence, and error handling. Run them with:
 
 ```bash
 mvn test
