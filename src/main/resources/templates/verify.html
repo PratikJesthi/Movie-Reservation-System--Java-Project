@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Ticket check | ReelReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+
+<body>
+    <div th:replace="~{fragments/nav :: navigation}"></div>
+    <main class="container narrow">
+        <section class="confirmation-card" th:if="${state != 'INVALID'}">
+            <div class="success-mark" th:text="${state == 'VALID'} ? '✓' : '!'">✓</div>
+            <p class="eyebrow" th:text="${state == 'VALID'} ? 'VALID TICKET' : 'ALREADY USED'">VALID TICKET</p>
+            <h1 th:text="${booking.movieTitle}">Movie</h1>
+            <p class="muted">
+                <span th:text="${#temporals.format(booking.showTime, 'dd MMM yyyy, hh:mm a')}">time</span><br>
+                <span th:text="|${booking.theatreName} · ${booking.screenName}|">theatre</span><br>
+                Seats: <span th:text="${#strings.listJoin(booking.seats, ', ')}">A1</span><br>
+                Booking #<span th:text="${booking.id}">1</span>
+            </p>
+            <p class="muted" th:if="${state == 'USED'}">
+                Checked in at <span th:text="${#temporals.format(checkedInAt, 'dd MMM yyyy, hh:mm a')}"></span>
+            </p>
+        </section>
+        <section class="form-card" th:if="${state == 'INVALID'}">
+            <p class="eyebrow">INVALID TICKET</p>
+            <h1>This ticket is not valid</h1>
+            <p class="muted">It may be unknown, unpaid, cancelled or expired.</p>
+        </section>
+    </main>
+</body>
+
+</html>

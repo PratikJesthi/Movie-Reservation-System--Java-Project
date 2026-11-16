@@ -9,7 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface BookingSeatRepository extends JpaRepository<BookingSeat, Long> {
     @Query("select bs.seat.id from BookingSeat bs where bs.show.id = :showId "
-            + "and bs.booking.status = 'CONFIRMED'")
+            + "and (bs.booking.status = com.moviebooking.model.BookingStatus.PENDING "
+            + "or bs.booking.status = com.moviebooking.model.BookingStatus.CONFIRMED)")
     List<Long> findBookedSeatIds(@Param("showId") Long showId);
 
     @Query("select bs from BookingSeat bs where bs.booking.id = :bookingId order by bs.seat.rowLabel, bs.seat.seatNumber")

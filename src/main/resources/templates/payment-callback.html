@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Payment Status | ReelReserve</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<div th:replace="~{fragments/nav :: navigation}"></div>
+
+<main class="container narrow">
+    <section class="confirmation-card" th:if="${success}">
+        <div class="success-mark">✓</div>
+        <p class="eyebrow">BOOKING CONFIRMED</p>
+        <h1>Your payment was successful!</h1>
+        <p class="muted">
+            <strong th:text="${movieTitle}">Movie Title</strong><br>
+            <span th:text="${#temporals.format(showTime, 'dd MMM yyyy, hh:mm a')}">Showtime</span><br>
+            <span th:text="|${theatreName} · ${screenName}|">Theatre</span><br>
+            Total Paid: ₹<span th:text="${#numbers.formatDecimal(amount, 1, 2)}">0.00</span><br>
+            Booking #<span th:text="${booking.id}">1</span>
+            <span th:if="${paymentId != null}"> (Payment Ref: <code th:text="${paymentId}">pay_xxx</code>)</span>
+        </p>
+        <div th:if="${ticketToken != null}" style="text-align: center; margin: 1.5rem 0;">
+            <img th:src="@{/ticket/{t}/qr.png(t=${ticketToken})}"
+                 alt="Ticket QR" width="220" height="220" style="display: block; margin: 0 auto; border-radius: 8px; border: 1px solid #ddd;">
+            <p class="muted" style="margin-top: 0.5rem;">We've also emailed this ticket to you.</p>
+        </div>
+        <div class="button-row">
+            <a class="button" href="/bookings">My bookings</a>
+            <a class="button button-secondary" href="/">Browse movies</a>
+        </div>
+    </section>
+
+    <section class="form-card" th:unless="${success}">
+        <p class="eyebrow">PAYMENT NOT VERIFIED</p>
+        <h1>Payment could not be confirmed</h1>
+        <p class="form-message is-error" th:text="${errorMessage}">
+            The payment signature could not be verified or the payment did not complete.
+        </p>
+        <p class="muted">
+            If payment was not completed, your pending seat reservation will automatically expire after 10 minutes and the seats will be released.
+        </p>
+        <div class="button-row">
+            <a class="button" href="/">Browse movies</a>
+            <a class="button button-secondary" href="/bookings">My bookings</a>
+        </div>
+    </section>
+</main>
+
+<script src="/js/app.js" defer></script>
+</body>
+</html>

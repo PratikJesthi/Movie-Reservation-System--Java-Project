@@ -6,5 +6,12 @@ import java.util.List;
 
 public record BookingResponse(Long id, Long showId, String movieTitle, String theatreName,
                               String screenName, LocalDateTime showTime, List<String> seats,
-                              BigDecimal totalAmount, String status, LocalDateTime createdAt) {
+                              BigDecimal totalAmount, String status, LocalDateTime createdAt,
+                              String paymentLinkUrl) {
+
+    public BookingResponse(Long id, Long showId, String movieTitle, String theatreName,
+                           String screenName, LocalDateTime showTime, List<String> seats,
+                           BigDecimal totalAmount, String status, LocalDateTime createdAt) {
+        this(id, showId, movieTitle, theatreName, screenName, showTime, seats, totalAmount, status, createdAt, null);
+    }
 }

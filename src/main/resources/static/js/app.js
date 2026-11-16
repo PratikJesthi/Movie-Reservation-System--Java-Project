@@ -117,7 +117,8 @@ async function loadSeats() {
                     method: 'POST', body: JSON.stringify({ showId: Number(showId), seatIds: [...selected] })
                 });
                 sessionStorage.setItem('latestBookingId', String(booking.id));
-                window.location.href = `/bookings/confirmation/${booking.id}`;
+                if (!booking.paymentLinkUrl) throw new Error('Payment link could not be generated. Please try again.');
+                window.location.href = booking.paymentLinkUrl;
             } catch (error) {
                 document.querySelector('#seat-hint').textContent = error.message;
                 document.querySelector('#seat-hint').classList.add('is-error');

@@ -33,6 +33,12 @@ public class ShowService {
     }
 
     @Transactional(readOnly = true)
+    public ShowResponse findShowById(Long showId) {
+        Show show = getShow(showId);
+        return toResponse(show);
+    }
+
+    @Transactional(readOnly = true)
     public List<SeatResponse> seatsForShow(Long showId) {
         Show show = getShow(showId);
         Set<Long> bookedIds = Set.copyOf(bookingSeatRepository.findBookedSeatIds(showId));
