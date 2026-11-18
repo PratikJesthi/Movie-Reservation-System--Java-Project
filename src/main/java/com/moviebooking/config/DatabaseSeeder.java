@@ -11,6 +11,7 @@ import com.moviebooking.repository.SeatRepository;
 import com.moviebooking.repository.ShowRepository;
 import com.moviebooking.repository.TheatreRepository;
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,6 +48,7 @@ public class DatabaseSeeder implements CommandLineRunner {
     public void run(String... args) {
         if (movieRepository.count() > 0) {
             log.info("Database already contains movie catalogue data. Skipping initial seeding.");
+            topUpExtraMovies();
             return;
         }
 
@@ -99,6 +101,7 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         showRepository.saveAll(List.of(show1, show2, show3, show4, show5, show6));
         log.info("Sample catalogue seeded successfully.");
+        topUpExtraMovies();
     }
 
     private void seedSeatsForScreen(Screen screen, List<Seat> list) {
@@ -132,5 +135,40 @@ public class DatabaseSeeder implements CommandLineRunner {
         s.setShowTime(time);
         s.setPrice(price);
         return s;
+    }
+
+    private record Extra(String title, String desc, String genre, int mins, String lang,
+                         String cert, int releaseInDays) {}
+
+    private void topUpExtraMovies() {
+        List<Screen> screens = screenRepository.findAll();
+        if (screens.isEmpty()) return;
+        List<Extra> extras = List.of(
+            new Extra("Ghost Frequency", "A night-shift radio host starts getting calls from a station that closed decades ago.", "Horror", 104, "English", "A", 0),
+            new Extra("Kabaddi Kings", "A struggling village team gets one last season to win the state title.", "Sports", 134, "Hindi", "UA", 0),
+            new Extra("Silver Tide", "A lonely lighthouse robot befriends a young whale.", "Animation", 96, "English", "U", 0),
+            new Extra("Neon Lanes", "A courier races through a sleepless city to expose a fake-ID ring.", "Thriller", 117, "Tamil", "UA", 0),
+            new Extra("Chaya Nagar", "Three generations share one crumbling house and one big secret.", "Drama", 126, "Odia", "U", 0),
+            new Extra("Iron Monsoon", "An ex-army engineer defends a dam during the worst storm in fifty years.", "Action", 141, "Telugu", "UA", 0),
+            new Extra("Starlight Express", "Two strangers on an overnight train keep missing each other's stops.", "Romance", 109, "Hindi", "U", 10));
+        java.time.LocalDate today = java.time.LocalDate.now();
+        int i = 0;
+        for (Extra e : extras) {
+            if (!movieRepository.existsByTitle(e.title())) {
+                Movie m = createMovie(e.title(), e.desc(), e.genre(), e.mins(), e.lang(), null);
+                m.setCertificate(e.cert());
+                boolean comingSoon = e.releaseInDays() > 0;
+                m.setReleaseDate(comingSoon ? today.plusDays(e.releaseInDays()) : today.minusDays(7));
+                m = movieRepository.save(m);
+                if (!comingSoon) {
+                    Screen screen = screens.get(i % screens.size());
+                    BigDecimal price = BigDecimal.valueOf(180 + (i % 4) * 40);
+                    LocalDateTime base = today.atStartOfDay().plusDays(1 + (i % 3));
+                    showRepository.save(createShow(m, screen, base.plusHours(12), price));
+                    showRepository.save(createShow(m, screen, base.plusDays(1).plusHours(19), price));
+                }
+            }
+            i++;
+        }
     }
 }

@@ -268,3 +268,75 @@ Three nullable columns were added so the application remains backwards-compatibl
 [INFO] BUILD SUCCESS
 [INFO] ------------------------------------------------------------------------
 ```
+
+---
+
+## Phase 6: Admin Login Flow & Security Hardening (COMPLETE ✅)
+
+**Tests after phase:** 54 / 54 passing (`BUILD SUCCESS`)
+
+### Files Changed
+
+| File | Action | Reason |
+|---|---|---|
+| `AuthController.java` | Edited | Added `POST /api/auth/admin-login` with throttle + generic error |
+| `PageController.java` | Edited | Guard `GET /admin` server-side; add `GET /admin/login` route |
+| `application.properties` | Edited | Added `app.admin.login.max-attempts` / `window-minutes` config |
+| `static/js/app.js` | Edited | Fixed "log in as admin" link to `/admin/login`; added `wireAdminLoginForm()` |
+
+### Files Created
+
+| File | Reason |
+|---|---|
+| `service/AdminLoginThrottleService.java` | In-memory per-email+IP brute-force throttle |
+| `config/AdminBootstrapRunner.java` | Env-var-driven ADMIN account creation on first startup |
+| `templates/admin-login.html` | Admin login page (same styling as login.html) |
+| `test/controller/AdminAuthControllerTest.java` | 8 tests: success, 3× generic-401, lockout, counter-clear, pre-lock |
+| `test/controller/AdminGuardTest.java` | 5 tests: anon→redirect, no-attr→redirect, USER→403, ADMIN→200, /admin/login always works |
+| `test/config/AdminBootstrapRunnerTest.java` | 10 tests: creates once, skips on missing vars, short password, existing admin, duplicate restart |
+
+### Design Decisions
+
+- **Same 401 for all admin failures** — wrong password, unknown email, and valid non-admin account all return `{"message":"Invalid administrator credentials."}`. The endpoint cannot reveal whether an email exists.
+- **Session fixation prevention** — `old.invalidate()` before `getSession(true)` on every successful admin login.
+- **Throttle key** = `lowercase(email)|clientIp` — keyed on both so a shared IP doesn't lock out other users.
+- **`@Value` injection** for `maxAttempts` / `windowMinutes` means limits are configurable without recompiling.
+- **No hardcoded admin** — `DatabaseSeeder` creates only catalogue data; `AdminBootstrapRunner` creates admin only from env vars if none exists.
+
+### Later Work (not implemented)
+
+- CSRF protection (all state-changing endpoints)
+- Two-factor authentication for admin accounts
+- Persistent / shared lockout store (Redis or DB row) for multi-instance deployments
+- Admin audit log (who changed what, and when)
+- STAFF role limited to ticket check-in only
+
+---
+
+## Phase 7: Auto-Generated SVG Posters (COMPLETE ✅)
+
+**Tests after phase:** 64 / 64 passing (`BUILD SUCCESS`)
+
+### Files Changed
+
+| File | Action | Reason |
+|---|---|---|
+| `MovieService.java` | Edited | Injected `PosterSvgService`; updated `toResponse` to route null posters to `/api/movies/{id}/poster` while preserving external URLs; added `getPosterSvg(Long id)` |
+| `MovieController.java` | Edited | Added `GET /api/movies/{id}/poster` endpoint producing `image/svg+xml;charset=UTF-8` with 24h caching |
+
+### Files Created
+
+| File | Reason |
+|---|---|
+| `service/PosterSvgService.java` | Pure Java deterministic SVG poster generator (viewBox 0 0 600 900) with 11 custom genre-themed palettes & motifs, word wrapping, vignette contrast protection, and certificate badge |
+| `test/service/PosterSvgServiceTest.java` | 6 unit tests covering determinism, SVG dimensions, XML escaping, certificate badge, all 11 genre motifs, and title wrapping |
+| `test/service/MovieServiceTest.java` | 3 tests verifying external poster preservation, null poster fallback to SVG endpoint, and SVG generation |
+| `test/controller/MovieControllerTest.java` | 1 test verifying `/api/movies/{id}/poster` endpoint status, content-type, and caching headers |
+
+### Design Decisions
+
+- **Aspect Ratio**: 600 × 900 (2:3), exactly matching the cover proportions used by `.movie-card img` and `.detail-poster` in `styles.css`.
+- **Pure Java Vector Generation**: No external libraries, fonts, or network calls; fully rendered via SVG XML markup.
+- **Deterministic Art Generation**: Seeded `Random` derived from `title` and `genre` hash codes ensures identical outputs on repeat requests.
+- **Protection Vignette**: Dark gradient overlay over the bottom third guarantees high-contrast text readability regardless of background art.
+- **External URL Preservation**: Movies with existing external URLs (e.g. the first three seeded titles) remain untouched. Only movies with `posterUrl == null` are routed to the auto-generated SVG poster endpoint.

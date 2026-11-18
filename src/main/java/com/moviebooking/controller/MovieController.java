@@ -9,7 +9,9 @@ import com.moviebooking.service.ShowService;
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -41,6 +43,13 @@ public class MovieController {
     @GetMapping("/{id}")
     public MovieResponse movie(@PathVariable Long id) {
         return movieService.findById(id);
+    }
+
+    @GetMapping(value = "/{id}/poster", produces = "image/svg+xml;charset=UTF-8")
+    public ResponseEntity<String> poster(@PathVariable Long id) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=86400")
+                .body(movieService.getPosterSvg(id));
     }
 
     @GetMapping("/{id}/shows")

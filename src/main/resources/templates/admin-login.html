@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin Login | CHALCHITRA</title><link rel="stylesheet" href="/css/styles.css"></head>
+<body data-page="admin-login"><div th:replace="~{fragments/nav :: navigation}"></div>
+<main class="container narrow"><section class="form-card">
+    <p class="eyebrow">ADMINISTRATOR</p>
+    <h1>Admin login</h1>
+    <p class="muted">Sign in with your administrator credentials.</p>
+    <form id="admin-login-form">
+        <label>Email<input name="email" type="email" autocomplete="username" required></label>
+        <label>Password<input name="password" type="password" autocomplete="current-password" required></label>
+        <p id="form-message" class="form-message" role="alert"></p>
+        <button class="button" type="submit">Log in as admin</button>
+    </form>
+    <p class="form-footnote"><a href="/">← Back to home</a></p>
+</section></main>
+<script src="/js/app.js" defer></script></body></html>

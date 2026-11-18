@@ -12,9 +12,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MovieService {
     private final MovieRepository movieRepository;
+    private final PosterSvgService posterSvgService;
 
-    public MovieService(MovieRepository movieRepository) {
+    public MovieService(MovieRepository movieRepository, PosterSvgService posterSvgService) {
         this.movieRepository = movieRepository;
+        this.posterSvgService = posterSvgService;
     }
 
     @Transactional(readOnly = true)
@@ -42,6 +44,12 @@ public class MovieService {
         movieRepository.delete(getMovie(id));
     }
 
+    @Transactional(readOnly = true)
+    public String getPosterSvg(Long id) {
+        Movie movie = getMovie(id);
+        return posterSvgService.render(movie.getTitle(), movie.getGenre(), movie.getLanguage(), movie.getCertificate());
+    }
+
     private Movie getMovie(Long id) {
         return movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie " + id + " was not found."));
@@ -54,11 +62,18 @@ public class MovieService {
         movie.setDurationMinutes(request.durationMinutes());
         movie.setLanguage(request.language().trim());
         movie.setPosterUrl(request.posterUrl() == null ? null : request.posterUrl().trim());
+        movie.setReleaseDate(request.releaseDate());
+        movie.setCertificate(request.certificate());
         return movie;
     }
 
     private MovieResponse toResponse(Movie movie) {
+        String posterUrl = (movie.getPosterUrl() != null && !movie.getPosterUrl().isBlank())
+                ? movie.getPosterUrl()
+                : (movie.getId() != null ? "/api/movies/" + movie.getId() + "/poster" : null);
+
         return new MovieResponse(movie.getId(), movie.getTitle(), movie.getDescription(), movie.getGenre(),
-                movie.getDurationMinutes(), movie.getLanguage(), movie.getPosterUrl());
+                movie.getDurationMinutes(), movie.getLanguage(), posterUrl,
+                movie.getReleaseDate(), movie.getCertificate());
     }
 }

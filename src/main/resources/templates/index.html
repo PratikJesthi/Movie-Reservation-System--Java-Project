@@ -10,7 +10,15 @@
     <section class="hero"><p class="eyebrow">YOUR NEXT NIGHT OUT</p><h1>Find a seat for a great story.</h1>
         <p>Browse now showing movies and reserve your seats in a few simple steps.</p></section>
     <section><div class="section-heading"><div><p class="eyebrow">NOW SHOWING</p><h2>Movies</h2></div></div>
-        <div id="movie-grid" class="movie-grid"><p class="muted">Loading movies…</p></div></section>
+    <div class="filters">
+        <input id="movie-search" type="search" placeholder="Search movies" aria-label="Search movies">
+        <select id="filter-language" aria-label="Language"><option value="">All languages</option></select>
+        <select id="filter-genre" aria-label="Genre"><option value="">All genres</option></select>
+    </div>
+    <div id="movie-grid" class="movie-grid"><p class="muted">Loading movies...</p></div></section>
+<section id="coming-soon-section" hidden>
+    <div class="section-heading"><div><p class="eyebrow">COMING SOON</p><h2>Upcoming</h2></div></div>
+    <div id="coming-soon-grid" class="movie-grid"></div></section>
 </main>
 <script src="/js/app.js" defer></script>
 </body></html>

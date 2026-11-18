@@ -43,20 +43,53 @@ async function updateNavigation() {
     }
 }
 
+const formatDay = value => new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' })
+    .format(new Date(`${value}T00:00:00`));
+
 async function loadHome() {
-    const grid = document.querySelector('#movie-grid');
+    const nowGrid = document.querySelector('#movie-grid');
+    const soonGrid = document.querySelector('#coming-soon-grid');
+    const soonSection = document.querySelector('#coming-soon-section');
+    const search = document.querySelector('#movie-search');
+    const langSelect = document.querySelector('#filter-language');
+    const genreSelect = document.querySelector('#filter-genre');
+    const d = new Date();
+    const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+    const card = (movie, soon) => `
+        <a class="movie-card" href="/movies/${movie.id}">
+            <img src="${escapeHtml(movie.posterUrl || '')}" alt="Poster for ${escapeHtml(movie.title)}"
+                 onerror="this.classList.add('image-missing');this.removeAttribute('src')">
+            <div class="movie-card-body"><p class="eyebrow">${escapeHtml(movie.genre)} · ${movie.durationMinutes} min${movie.certificate ? ' · ' + escapeHtml(movie.certificate) : ''}</p>
+                <h3>${escapeHtml(movie.title)}</h3>
+                <p class="muted">${escapeHtml(movie.language)}${soon ? ' · Releases ' + escapeHtml(formatDay(movie.releaseDate)) : ''}</p>
+                <span class="text-link">${soon ? 'View details →' : 'View showtimes →'}</span></div>
+        </a>`;
+
     try {
         const movies = await api('/api/movies');
-        grid.innerHTML = movies.length ? movies.map(movie => `
-            <a class="movie-card" href="/movies/${movie.id}">
-                <img src="${escapeHtml(movie.posterUrl || '')}" alt="Poster for ${escapeHtml(movie.title)}"
-                     onerror="this.classList.add('image-missing');this.removeAttribute('src')">
-                <div class="movie-card-body"><p class="eyebrow">${escapeHtml(movie.genre)} · ${movie.durationMinutes} min</p>
-                    <h3>${escapeHtml(movie.title)}</h3><p class="muted">${escapeHtml(movie.language)}</p>
-                    <span class="text-link">View showtimes →</span></div>
-            </a>`).join('') : '<p class="muted">No movies have been added yet.</p>';
+        const fill = (select, values) => values.forEach(v => select.insertAdjacentHTML('beforeend',
+            `<option value="${escapeHtml(v)}">${escapeHtml(v)}</option>`));
+        fill(langSelect, [...new Set(movies.map(m => m.language))].sort());
+        fill(genreSelect, [...new Set(movies.map(m => m.genre))].sort());
+
+        const render = () => {
+            const q = search.value.trim().toLowerCase();
+            const shown = movies.filter(m =>
+                (!q || m.title.toLowerCase().includes(q)) &&
+                (!langSelect.value || m.language === langSelect.value) &&
+                (!genreSelect.value || m.genre === genreSelect.value));
+            const soon = shown.filter(m => m.releaseDate && m.releaseDate > today);
+            const now = shown.filter(m => !(m.releaseDate && m.releaseDate > today));
+            nowGrid.innerHTML = now.length ? now.map(m => card(m, false)).join('')
+                : '<p class="muted">No movies match your filters.</p>';
+            soonGrid.innerHTML = soon.map(m => card(m, true)).join('');
+            soonSection.hidden = soon.length === 0;
+        };
+        [search, langSelect, genreSelect].forEach(el => el.addEventListener('input', render));
+        render();
     } catch (error) {
-        grid.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)}</p>`;
+        nowGrid.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)}</p>`;
     }
 }
 
@@ -68,7 +101,7 @@ async function loadMovie() {
         const [movie, shows] = await Promise.all([api(`/api/movies/${id}`), api(`/api/movies/${id}/shows`)]);
         detail.innerHTML = `<img class="detail-poster" src="${escapeHtml(movie.posterUrl || '')}"
                 alt="Poster for ${escapeHtml(movie.title)}" onerror="this.classList.add('image-missing');this.removeAttribute('src')">
-            <div><p class="eyebrow">${escapeHtml(movie.genre)} · ${movie.durationMinutes} min · ${escapeHtml(movie.language)}</p>
+            <div><p class="eyebrow">${escapeHtml(movie.genre)} · ${movie.durationMinutes} min · ${escapeHtml(movie.language)}${movie.certificate ? ' · ' + escapeHtml(movie.certificate) : ''}</p>
                 <h1>${escapeHtml(movie.title)}</h1><p class="detail-description">${escapeHtml(movie.description)}</p></div>`;
         showList.innerHTML = shows.length ? shows.map(show => `<article class="show-card">
             <div><strong>${escapeHtml(formatDate(show.showTime))}</strong>
@@ -196,7 +229,7 @@ async function wireMovieForm() {
         const user = await api('/api/auth/me');
         if (user.role !== 'ADMIN') throw new Error('Administrator access is required.');
     } catch (error) {
-        form.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)} <a href="/login">Log in as an administrator</a></p>`;
+        form.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)} <a href="/admin/login">Log in as an administrator</a></p>`;
         return;
     }
     form.addEventListener('submit', async event => {
@@ -205,10 +238,59 @@ async function wireMovieForm() {
         const values = Object.fromEntries(new FormData(form));
         values.durationMinutes = Number(values.durationMinutes);
         values.posterUrl = values.posterUrl || null;
+        values.releaseDate = values.releaseDate || null;
+        values.certificate = values.certificate || null;
         try {
             const movie = await api('/api/movies', { method: 'POST', body: JSON.stringify(values) });
             setMessage(message, `Added “${movie.title}”.`, false);
             form.reset();
+            if (window.refreshShowOptions) window.refreshShowOptions();
+        } catch (error) { setMessage(message, error.message); }
+    });
+}
+
+async function wireShowForm() {
+    const form = document.querySelector('#show-form');
+    if (!form) return;
+    const movieSelect = form.querySelector('[name=movieId]');
+    const screenSelect = form.querySelector('[name=screenId]');
+    const message = document.querySelector('#show-message');
+    const fill = (select, items, label) => {
+        select.innerHTML = items.map(i => `<option value="${i.id}">${escapeHtml(label(i))}</option>`).join('');
+    };
+    const refresh = async () => {
+        const [movies, screens] = await Promise.all([api('/api/movies'), api('/api/admin/screens')]);
+        fill(movieSelect, movies, m => `${m.title} (${m.language})`);
+        fill(screenSelect, screens, s => s.label);
+    };
+    window.refreshShowOptions = () => refresh().catch(() => {});
+    try { await refresh(); } catch (error) {
+        form.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)} <a href="/admin/login">Log in as an administrator</a></p>`;
+        return;
+    }
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const values = Object.fromEntries(new FormData(form));
+        values.movieId = Number(values.movieId);
+        values.screenId = Number(values.screenId);
+        values.price = Number(values.price);
+        try {
+            const show = await api('/api/admin/shows', { method: 'POST', body: JSON.stringify(values) });
+            setMessage(message, `Added a show on ${formatDate(show.showTime)}.`, false);
+        } catch (error) { setMessage(message, error.message); }
+    });
+}
+
+function wireAdminLoginForm() {
+    const form = document.querySelector('#admin-login-form');
+    if (!form) return;
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const message = document.querySelector('#form-message');
+        const values = Object.fromEntries(new FormData(form));
+        try {
+            await api('/api/auth/admin-login', { method: 'POST', body: JSON.stringify(values) });
+            window.location.href = '/admin';
         } catch (error) { setMessage(message, error.message); }
     });
 }
@@ -222,5 +304,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (page === 'confirmation') loadConfirmation();
     if (page === 'bookings') loadBookings();
     if (page === 'login' || page === 'register') wireAccountForms();
+    if (page === 'admin-login') wireAdminLoginForm();
     if (page === 'admin') wireMovieForm();
+    if (page === 'admin') wireShowForm();
 });

@@ -37,4 +37,10 @@ public class Movie {
 
     @Column(name = "poster_url", length = 1000)
     private String posterUrl;
+
+    @Column(name = "release_date")
+    private java.time.LocalDate releaseDate;
+
+    @Column(length = 10)
+    private String certificate;
 }
