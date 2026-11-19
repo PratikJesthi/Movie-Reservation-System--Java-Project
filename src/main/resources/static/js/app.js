@@ -262,8 +262,9 @@ async function wireMovieForm() {
             form.reset();
             const fileHint = document.querySelector('#poster-file-hint');
             if (fileHint) fileHint.textContent = '';
-            if (window.refreshShowOptions) window.refreshShowOptions();
+            if (window.refreshShowOptions)  window.refreshShowOptions();
             if (window.refreshDeleteOptions) window.refreshDeleteOptions();
+            if (window.refreshEditOptions)   window.refreshEditOptions();
         } catch (error) { setMessage(message, error.message); }
     });
 
@@ -360,8 +361,147 @@ async function wireDeleteMovieForm() {
             await api(`/api/movies/${id}`, { method: 'DELETE' });
             setMessage(message, `"${label}" was deleted.`, false);
             await refresh();
-            if (window.refreshShowOptions) window.refreshShowOptions();
+            if (window.refreshShowOptions)  window.refreshShowOptions();
+            if (window.refreshEditOptions)   window.refreshEditOptions();
         } catch (error) { setMessage(message, error.message); }
+    });
+}
+
+async function wireEditMovieForm() {
+    const form = document.querySelector('#edit-movie-form');
+    if (!form) return;
+
+    const select    = form.querySelector('#edit-movie-select');
+    const fields    = form.querySelector('#edit-movie-fields');
+    const preview   = form.querySelector('#edit-poster-preview');
+    const previewLbl= form.querySelector('#edit-poster-preview-label');
+    const message   = form.querySelector('#edit-message');
+    const fileInput = form.querySelector('#edit-poster-file-input');
+    const urlInput  = form.querySelector('#edit-poster-url-input');
+    const fileHint  = form.querySelector('#edit-poster-file-hint');
+    const cancelBtn = form.querySelector('#edit-cancel-btn');
+
+    let movies = [];
+
+    const populateSelect = (list) => {
+        movies = list;
+        const prev = select.value;
+        select.innerHTML = '<option value="">— choose a movie —</option>' +
+            list.map(m => `<option value="${m.id}">${escapeHtml(m.title)} (${escapeHtml(m.language)})</option>`).join('');
+        if (prev && list.find(m => String(m.id) === prev)) select.value = prev;
+    };
+
+    const fillFields = (movie) => {
+        form.querySelector('#edit-title').value         = movie.title        || '';
+        form.querySelector('#edit-description').value   = movie.description  || '';
+        form.querySelector('#edit-genre').value         = movie.genre        || '';
+        form.querySelector('#edit-language').value      = movie.language     || '';
+        form.querySelector('#edit-durationMinutes').value = movie.durationMinutes || '';
+        form.querySelector('#edit-releaseDate').value   = movie.releaseDate  || '';
+        form.querySelector('#edit-certificate').value   = movie.certificate  || '';
+        urlInput.value = '';
+        fileHint.textContent = '';
+        message.textContent  = '';
+        message.className    = 'form-message';
+
+        // Poster preview: show current poster (may be SVG endpoint or external URL)
+        const rawPoster = movie.posterUrl || `/api/movies/${movie.id}/poster`;
+        preview.src = rawPoster;
+        preview.hidden = false;
+        preview.onerror = () => { preview.hidden = true; previewLbl.textContent = 'No poster preview'; };
+        preview.onload  = () => { previewLbl.textContent = 'Current poster'; };
+    };
+
+    const resetForm = () => {
+        select.value = '';
+        fields.hidden = true;
+        message.textContent = '';
+        fileHint.textContent = '';
+        preview.hidden = true;
+    };
+
+    // Refresh called after add / delete
+    window.refreshEditOptions = () => {
+        api('/api/movies').then(list => populateSelect(list)).catch(() => {});
+    };
+
+    try {
+        const list = await api('/api/movies');
+        populateSelect(list);
+    } catch (_) {
+        select.innerHTML = '<option value="">— error loading —</option>';
+    }
+
+    // On movie selected -> fetch full data and pre-fill
+    select.addEventListener('change', async () => {
+        const id = select.value;
+        if (!id) { fields.hidden = true; return; }
+        try {
+            const movie = await api(`/api/movies/${id}`);
+            fillFields(movie);
+            fields.hidden = false;
+        } catch (error) {
+            fields.hidden = true;
+            alert(`Could not load movie: ${error.message}`);
+        }
+    });
+
+    // File picker -> data URL into URL field
+    if (fileInput && urlInput) {
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                urlInput.value = e.target.result;
+                if (fileHint) fileHint.textContent = `Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+                // Show preview of the new image
+                preview.src = e.target.result;
+                preview.hidden = false;
+                previewLbl.textContent = 'New poster (not saved yet)';
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    // Cancel -> collapse
+    cancelBtn.addEventListener('click', () => resetForm());
+
+    // Submit -> PUT /api/movies/{id}
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const id = select.value;
+        if (!id) return;
+
+        // Build payload from current field values
+        const movie = movies.find(m => String(m.id) === id);
+        const values = {
+            title:           form.querySelector('#edit-title').value.trim(),
+            description:     form.querySelector('#edit-description').value.trim(),
+            genre:           form.querySelector('#edit-genre').value.trim(),
+            language:        form.querySelector('#edit-language').value.trim(),
+            durationMinutes: Number(form.querySelector('#edit-durationMinutes').value),
+            releaseDate:     form.querySelector('#edit-releaseDate').value   || null,
+            certificate:     form.querySelector('#edit-certificate').value   || null,
+            posterUrl:       urlInput.value.trim() || null,
+        };
+
+        try {
+            const updated = await api(`/api/movies/${id}`, { method: 'PUT', body: JSON.stringify(values) });
+            setMessage(message, `"${updated.title}" updated successfully.`, false);
+            fileHint.textContent = '';
+            if (fileInput) fileInput.value = '';
+            // Refresh other sections that list movies
+            if (window.refreshShowOptions)  window.refreshShowOptions();
+            if (window.refreshDeleteOptions) window.refreshDeleteOptions();
+            // Re-populate select and re-fill with fresh data
+            const list = await api('/api/movies');
+            populateSelect(list);
+            select.value = String(id);
+            fillFields(list.find(m => String(m.id) === id) || updated);
+        } catch (error) {
+            setMessage(message, error.message);
+        }
     });
 }
 
@@ -376,6 +516,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (page === 'login' || page === 'register') wireAccountForms();
     if (page === 'admin-login') wireAdminLoginForm();
     if (page === 'admin') wireMovieForm();
+    if (page === 'admin') wireEditMovieForm();
     if (page === 'admin') wireShowForm();
     if (page === 'admin') wireDeleteMovieForm();
 });

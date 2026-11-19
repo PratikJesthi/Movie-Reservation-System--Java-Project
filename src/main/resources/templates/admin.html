@@ -91,6 +91,94 @@
             </form>
         </section>
 
+        <!-- Edit Movie Section -->
+        <section class="form-card">
+            <p class="eyebrow">CATALOGUE</p>
+            <h1>Edit a movie</h1>
+            <p class="muted">Select a movie to edit its details.</p>
+
+            <form id="edit-movie-form">
+                <label>
+                    Select movie to edit
+                    <select id="edit-movie-select" required>
+                        <option value="">— loading… —</option>
+                    </select>
+                </label>
+
+                <div id="edit-movie-fields" hidden>
+
+                    <div class="edit-poster-preview-row">
+                        <img id="edit-poster-preview" class="edit-poster-preview" src="" alt="Current poster" hidden>
+                        <span class="muted" id="edit-poster-preview-label"></span>
+                    </div>
+
+                    <label>
+                        Title
+                        <input id="edit-title" name="title" maxlength="200" required>
+                    </label>
+
+                    <label>
+                        Description
+                        <textarea id="edit-description" name="description" rows="4" required></textarea>
+                    </label>
+
+                    <div class="form-grid">
+                        <label>
+                            Genre
+                            <input id="edit-genre" name="genre" maxlength="100" required>
+                        </label>
+                        <label>
+                            Language
+                            <input id="edit-language" name="language" maxlength="80" required>
+                        </label>
+                    </div>
+
+                    <div class="form-grid">
+                        <label>
+                            Release date
+                            <span class="muted">(optional)</span>
+                            <input id="edit-releaseDate" name="releaseDate" type="date">
+                        </label>
+                        <label>
+                            Certificate
+                            <span class="muted">(optional)</span>
+                            <select id="edit-certificate" name="certificate">
+                                <option value="">—</option>
+                                <option>U</option>
+                                <option>UA</option>
+                                <option>A</option>
+                            </select>
+                        </label>
+                    </div>
+
+                    <label>
+                        Duration in minutes
+                        <input id="edit-durationMinutes" name="durationMinutes" type="number" min="1" required>
+                    </label>
+
+                    <label>
+                        Poster image URL
+                        <span class="muted">(optional)</span>
+                        <input id="edit-poster-url-input" name="posterUrl" type="url" autocomplete="off">
+                    </label>
+
+                    <label>
+                        Or upload a new poster image
+                        <span class="muted">(optional — overrides URL above)</span>
+                        <input id="edit-poster-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                    </label>
+                    <small class="muted" id="edit-poster-file-hint"></small>
+
+                    <p id="edit-message" class="form-message" role="alert"></p>
+
+                    <div class="button-row" style="justify-content:flex-start;gap:10px;margin-top:16px;">
+                        <button class="button" type="submit">Save changes</button>
+                        <button class="button button-secondary" type="button" id="edit-cancel-btn">Cancel</button>
+                    </div>
+                </div>
+            </form>
+        </section>
+
         <!-- Add Showtime Section -->
         <section class="form-card">
             <p class="eyebrow">SCHEDULE</p>

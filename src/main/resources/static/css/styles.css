@@ -98,3 +98,8 @@ label small { color: var(--muted); font-weight: 400; }
 /* Danger button */
 .button-danger { background: #c0392b; }
 .button-danger:hover:not(:disabled) { background: #96281b; }
+
+/* Edit movie poster preview */
+.edit-poster-preview-row { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; }
+.edit-poster-preview { width: 72px; height: 108px; object-fit: cover; border-radius: 7px; border: 1px solid var(--line); background: var(--surface); }
+.edit-poster-preview[hidden] { display: none; }
