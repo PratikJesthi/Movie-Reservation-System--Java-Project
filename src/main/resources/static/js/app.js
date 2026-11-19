@@ -153,8 +153,13 @@ async function loadSeats() {
                 if (!booking.paymentLinkUrl) throw new Error('Payment link could not be generated. Please try again.');
                 window.location.href = booking.paymentLinkUrl;
             } catch (error) {
-                document.querySelector('#seat-hint').textContent = error.message;
-                document.querySelector('#seat-hint').classList.add('is-error');
+                const hint = document.querySelector('#seat-hint');
+                if (error.message && error.message.toLowerCase().includes('log in')) {
+                    hint.innerHTML = `<span class="is-error">${escapeHtml(error.message)} <a href="/login" class="text-link">Log in here</a></span>`;
+                } else {
+                    hint.textContent = error.message;
+                    hint.classList.add('is-error');
+                }
                 bookButton.disabled = selected.size === 0;
             }
         });

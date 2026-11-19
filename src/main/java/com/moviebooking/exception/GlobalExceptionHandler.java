@@ -72,6 +72,12 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.CONFLICT, "The request conflicts with existing data.", Map.of());
     }
 
+    @ExceptionHandler(IllegalStateException.class)
+    public ResponseEntity<ApiError> illegalState(IllegalStateException ex) {
+        log.error("Application state or configuration error: {}", ex.getMessage());
+        return error(HttpStatus.BAD_REQUEST, ex.getMessage(), Map.of());
+    }
+
     private ResponseEntity<ApiError> error(HttpStatus status, String message, Map<String, String> details) {
         ApiError body = new ApiError(Instant.now(), status.value(), status.getReasonPhrase(), message, details);
         return ResponseEntity.status(status).body(body);
