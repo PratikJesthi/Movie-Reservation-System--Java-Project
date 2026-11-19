@@ -236,6 +236,33 @@
             </form>
         </section>
 
+        <!-- Delete Showtime Section -->
+        <section class="form-card">
+            <p class="eyebrow">SCHEDULE</p>
+            <h1>Delete a showtime</h1>
+            <p class="muted">Select a movie, then select the showtime to remove. Showtimes with existing bookings cannot be deleted.</p>
+
+            <form id="delete-show-form">
+                <label>
+                    Movie
+                    <select id="delete-show-movie-select">
+                        <option value="">— choose a movie —</option>
+                    </select>
+                </label>
+
+                <label id="delete-show-label" hidden>
+                    Showtime
+                    <select id="delete-show-select" required>
+                        <option value="">— choose a showtime —</option>
+                    </select>
+                </label>
+
+                <p id="delete-show-message" class="form-message" role="alert"></p>
+
+                <button class="button button-danger" type="submit" id="delete-show-btn" disabled>Delete showtime</button>
+            </form>
+        </section>
+
     </main>
 
     <script src="/js/app.js" defer></script>

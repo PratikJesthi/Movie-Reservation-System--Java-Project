@@ -505,6 +505,84 @@ async function wireEditMovieForm() {
     });
 }
 
+async function wireDeleteShowForm() {
+    const form = document.querySelector('#delete-show-form');
+    if (!form) return;
+
+    const movieSelect = form.querySelector('#delete-show-movie-select');
+    const showLabel   = form.querySelector('#delete-show-label');
+    const showSelect  = form.querySelector('#delete-show-select');
+    const message     = form.querySelector('#delete-show-message');
+    const submitBtn   = form.querySelector('#delete-show-btn');
+
+    const formatShowOption = (show) => {
+        const dt = formatDate(show.showTime);
+        return `${dt} — ${escapeHtml(show.theatreName)}, ${escapeHtml(show.city)} (${escapeHtml(show.screenName)})`;
+    };
+
+    // Load movies into first dropdown
+    const loadMovies = async () => {
+        try {
+            const movies = await api('/api/movies');
+            movieSelect.innerHTML = '<option value="">— choose a movie —</option>' +
+                movies.map(m => `<option value="${m.id}">${escapeHtml(m.title)} (${escapeHtml(m.language)})</option>`).join('');
+        } catch (_) {
+            movieSelect.innerHTML = '<option value="">— error loading —</option>';
+        }
+    };
+    window.refreshDeleteShowMovies = () => loadMovies();
+    await loadMovies();
+
+    // On movie selected -> load its showtimes
+    movieSelect.addEventListener('change', async () => {
+        const movieId = movieSelect.value;
+        message.textContent = '';
+        message.className = 'form-message';
+        showSelect.innerHTML = '<option value="">— loading… —</option>';
+        showLabel.hidden = true;
+        submitBtn.disabled = true;
+        if (!movieId) return;
+        try {
+            const shows = await api(`/api/admin/shows?movieId=${movieId}`);
+            if (!shows.length) {
+                showSelect.innerHTML = '<option value="">— no showtimes —</option>';
+                showLabel.hidden = false;
+                return;
+            }
+            showSelect.innerHTML = '<option value="">— choose a showtime —</option>' +
+                shows.map(s => `<option value="${s.id}">${escapeHtml(formatShowOption(s))}</option>`).join('');
+            showLabel.hidden = false;
+        } catch (error) {
+            message.textContent = error.message;
+            message.classList.add('is-error');
+        }
+    });
+
+    // Enable button when a show is chosen
+    showSelect.addEventListener('change', () => {
+        submitBtn.disabled = !showSelect.value;
+    });
+
+    // Submit -> DELETE /api/admin/shows/{id}
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const showId = showSelect.value;
+        if (!showId) return;
+        const label = showSelect.options[showSelect.selectedIndex].text;
+        if (!window.confirm(`Delete showtime:\n"${label}"?\nThis cannot be undone.`)) return;
+        submitBtn.disabled = true;
+        try {
+            await api(`/api/admin/shows/${showId}`, { method: 'DELETE' });
+            setMessage(message, 'Showtime deleted.', false);
+            // Reload showtimes for this movie
+            movieSelect.dispatchEvent(new Event('change'));
+        } catch (error) {
+            setMessage(message, error.message);
+            submitBtn.disabled = false;
+        }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     updateNavigation();
     const page = document.body.dataset.page;
@@ -519,4 +597,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (page === 'admin') wireEditMovieForm();
     if (page === 'admin') wireShowForm();
     if (page === 'admin') wireDeleteMovieForm();
+    if (page === 'admin') wireDeleteShowForm();
 });

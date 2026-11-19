@@ -5,6 +5,7 @@ import com.moviebooking.dto.ShowResponse;
 import com.moviebooking.exception.ResourceNotFoundException;
 import com.moviebooking.model.Seat;
 import com.moviebooking.model.Show;
+import com.moviebooking.repository.BookingRepository;
 import com.moviebooking.repository.BookingSeatRepository;
 import com.moviebooking.repository.SeatRepository;
 import com.moviebooking.repository.ShowRepository;
@@ -18,18 +19,31 @@ public class ShowService {
     private final ShowRepository showRepository;
     private final SeatRepository seatRepository;
     private final BookingSeatRepository bookingSeatRepository;
+    private final BookingRepository bookingRepository;
 
     public ShowService(ShowRepository showRepository, SeatRepository seatRepository,
-                       BookingSeatRepository bookingSeatRepository) {
+                       BookingSeatRepository bookingSeatRepository,
+                       BookingRepository bookingRepository) {
         this.showRepository = showRepository;
         this.seatRepository = seatRepository;
         this.bookingSeatRepository = bookingSeatRepository;
+        this.bookingRepository = bookingRepository;
     }
 
     @Transactional(readOnly = true)
     public List<ShowResponse> findByMovie(Long movieId) {
         return showRepository.findByMovieIdOrderByShowTime(movieId).stream()
                 .map(this::toResponse).toList();
+    }
+
+    @Transactional
+    public void deleteShow(Long showId) {
+        Show show = getShow(showId);
+        if (bookingRepository.existsByShowId(showId)) {
+            throw new IllegalStateException(
+                    "Cannot delete this showtime because it has existing bookings.");
+        }
+        showRepository.delete(show);
     }
 
     @Transactional(readOnly = true)

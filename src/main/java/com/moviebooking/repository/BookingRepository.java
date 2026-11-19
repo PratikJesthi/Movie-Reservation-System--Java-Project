@@ -13,6 +13,8 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     java.util.Optional<Booking> findByTicketToken(String ticketToken);
 
+    boolean existsByShowId(Long showId);
+
     @Query("SELECT b FROM Booking b WHERE b.status = :status AND (b.expiresAt <= :now OR (b.expiresAt IS NULL AND b.createdAt <= :cutoff))")
     List<Booking> findStaleBookings(@Param("status") BookingStatus status,
                                    @Param("now") LocalDateTime now,
