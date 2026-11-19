@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import com.moviebooking.dto.MovieResponse;
 import com.moviebooking.model.Movie;
 import com.moviebooking.repository.MovieRepository;
+import com.moviebooking.repository.ShowRepository;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,13 +20,16 @@ class MovieServiceTest {
     @Mock
     private MovieRepository movieRepository;
 
+    @Mock
+    private ShowRepository showRepository;
+
     private PosterSvgService posterSvgService;
     private MovieService movieService;
 
     @BeforeEach
     void setUp() {
         posterSvgService = new PosterSvgService();
-        movieService = new MovieService(movieRepository, posterSvgService);
+        movieService = new MovieService(movieRepository, showRepository, posterSvgService);
     }
 
     @Test

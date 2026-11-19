@@ -5,6 +5,7 @@ import com.moviebooking.dto.MovieResponse;
 import com.moviebooking.exception.ResourceNotFoundException;
 import com.moviebooking.model.Movie;
 import com.moviebooking.repository.MovieRepository;
+import com.moviebooking.repository.ShowRepository;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,10 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class MovieService {
     private final MovieRepository movieRepository;
+    private final ShowRepository showRepository;
     private final PosterSvgService posterSvgService;
 
-    public MovieService(MovieRepository movieRepository, PosterSvgService posterSvgService) {
+    public MovieService(MovieRepository movieRepository, ShowRepository showRepository,
+            PosterSvgService posterSvgService) {
         this.movieRepository = movieRepository;
+        this.showRepository = showRepository;
         this.posterSvgService = posterSvgService;
     }
 
@@ -41,7 +45,13 @@ public class MovieService {
 
     @Transactional
     public void delete(Long id) {
-        movieRepository.delete(getMovie(id));
+        Movie movie = getMovie(id);
+        if (showRepository.existsByMovieId(id)) {
+            throw new IllegalStateException(
+                    "Cannot delete \"" + movie.getTitle() + "\" because it has scheduled showtimes. " +
+                    "Remove all showtimes first.");
+        }
+        movieRepository.delete(movie);
     }
 
     @Transactional(readOnly = true)

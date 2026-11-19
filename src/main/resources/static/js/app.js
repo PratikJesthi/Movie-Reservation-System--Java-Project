@@ -38,6 +38,17 @@ async function updateNavigation() {
             window.location.href = '/';
         });
         if (user.role === 'ADMIN') document.querySelector('#admin-link').hidden = false;
+
+        // Show admin session banner on admin page
+        const banner = document.querySelector('#admin-session-banner');
+        if (banner && user.role === 'ADMIN') {
+            document.querySelector('#admin-banner-email').textContent = user.email || 'admin';
+            banner.hidden = false;
+            document.querySelector('#admin-exit-btn').addEventListener('click', async () => {
+                await api('/api/auth/logout', { method: 'POST' });
+                window.location.href = '/';
+            });
+        }
     } catch (_) {
         // Guests see the default login and register links.
     }
@@ -249,9 +260,29 @@ async function wireMovieForm() {
             const movie = await api('/api/movies', { method: 'POST', body: JSON.stringify(values) });
             setMessage(message, `Added “${movie.title}”.`, false);
             form.reset();
+            const fileHint = document.querySelector('#poster-file-hint');
+            if (fileHint) fileHint.textContent = '';
             if (window.refreshShowOptions) window.refreshShowOptions();
+            if (window.refreshDeleteOptions) window.refreshDeleteOptions();
         } catch (error) { setMessage(message, error.message); }
     });
+
+    // Poster file picker: convert image to data URL and place in URL field
+    const fileInput = form.querySelector('#poster-file-input');
+    const urlInput = form.querySelector('#poster-url-input');
+    const fileHint = document.querySelector('#poster-file-hint');
+    if (fileInput && urlInput) {
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = e => {
+                urlInput.value = e.target.result;
+                if (fileHint) fileHint.textContent = `Loaded: ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
+            };
+            reader.readAsDataURL(file);
+        });
+    }
 }
 
 async function wireShowForm() {
@@ -300,6 +331,40 @@ function wireAdminLoginForm() {
     });
 }
 
+async function wireDeleteMovieForm() {
+    const form = document.querySelector('#delete-movie-form');
+    if (!form) return;
+    const select = form.querySelector('#delete-movie-select');
+    const message = document.querySelector('#delete-message');
+    const refresh = async () => {
+        const movies = await api('/api/movies');
+        if (!movies.length) {
+            select.innerHTML = '<option value="">— no movies —</option>';
+            return;
+        }
+        select.innerHTML = movies.map(m =>
+            `<option value="${m.id}">${escapeHtml(m.title)} (${escapeHtml(m.language)})</option>`
+        ).join('');
+    };
+    window.refreshDeleteOptions = () => refresh().catch(() => {});
+    try { await refresh(); } catch (error) {
+        select.innerHTML = '<option value="">— error loading —</option>';
+    }
+    form.addEventListener('submit', async event => {
+        event.preventDefault();
+        const id = select.value;
+        if (!id) return;
+        const label = select.options[select.selectedIndex].text;
+        if (!window.confirm(`Delete "${label}"? This cannot be undone.`)) return;
+        try {
+            await api(`/api/movies/${id}`, { method: 'DELETE' });
+            setMessage(message, `"${label}" was deleted.`, false);
+            await refresh();
+            if (window.refreshShowOptions) window.refreshShowOptions();
+        } catch (error) { setMessage(message, error.message); }
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     updateNavigation();
     const page = document.body.dataset.page;
@@ -312,4 +377,5 @@ document.addEventListener('DOMContentLoaded', () => {
     if (page === 'admin-login') wireAdminLoginForm();
     if (page === 'admin') wireMovieForm();
     if (page === 'admin') wireShowForm();
+    if (page === 'admin') wireDeleteMovieForm();
 });

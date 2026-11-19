@@ -35,7 +35,7 @@ public class Movie {
     @Column(nullable = false, length = 80)
     private String language;
 
-    @Column(name = "poster_url", length = 1000)
+    @Column(name = "poster_url", columnDefinition = "text")
     private String posterUrl;
 
     @Column(name = "release_date")

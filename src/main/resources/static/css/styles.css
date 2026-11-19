@@ -88,3 +88,13 @@ label small { color: var(--muted); font-weight: 400; }
 .filters input, .filters select { padding: .6rem .8rem; border: 1px solid rgba(128,128,128,.4);
     border-radius: 8px; background: transparent; color: inherit; font: inherit; }
 .filters input { flex: 1 1 220px; }
+
+/* Admin session banner */
+.admin-session-banner { display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;
+    background: #fff8e1; border: 1px solid #ffe082; border-radius: 10px; padding: 14px 20px;
+    margin: 18px 0 0; font-size: .92rem; color: #5a4000; }
+.admin-session-banner[hidden] { display: none; }
+
+/* Danger button */
+.button-danger { background: #c0392b; }
+.button-danger:hover:not(:disabled) { background: #96281b; }

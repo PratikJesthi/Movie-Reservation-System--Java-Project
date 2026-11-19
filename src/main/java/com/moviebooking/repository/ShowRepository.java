@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ShowRepository extends JpaRepository<Show, Long> {
     List<Show> findByMovieIdOrderByShowTime(Long movieId);
 
+    boolean existsByMovieId(Long movieId);
+
     java.util.List<Show> findByScreenIdAndShowTimeBetween(Long screenId,
             java.time.LocalDateTime from, java.time.LocalDateTime to);
 }

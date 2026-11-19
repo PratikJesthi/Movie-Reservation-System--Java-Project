@@ -13,6 +13,12 @@
 
     <main class="container narrow">
 
+        <!-- Session warning banner -->
+        <div class="admin-session-banner" id="admin-session-banner" hidden>
+            <span>⚠️ You are logged in as <strong id="admin-banner-email"></strong>. Logging in here shares your browser session — opening this in a tab where a customer is logged in will end that session.</span>
+            <button class="button button-secondary button-small" id="admin-exit-btn" type="button">Exit admin &amp; go to home</button>
+        </div>
+
         <!-- Add Movie Section -->
         <section class="form-card">
             <p class="eyebrow">CATALOGUE</p>
@@ -69,8 +75,15 @@
                 <label>
                     Poster image URL
                     <span class="muted">(optional)</span>
-                    <input name="posterUrl" type="url" maxlength="1000">
+                    <input name="posterUrl" type="url" id="poster-url-input" autocomplete="off">
                 </label>
+
+                <label>
+                    Or upload a poster image
+                    <span class="muted">(optional — overrides URL above)</span>
+                    <input id="poster-file-input" type="file" accept="image/jpeg,image/png,image/webp,image/gif">
+                </label>
+                <small class="muted" id="poster-file-hint"></small>
 
                 <p id="form-message" class="form-message" role="alert"></p>
 
@@ -112,6 +125,26 @@
                 <p id="show-message" class="form-message" role="alert"></p>
 
                 <button class="button" type="submit">Add showtime</button>
+            </form>
+        </section>
+
+        <!-- Delete Movie Section -->
+        <section class="form-card">
+            <p class="eyebrow">MANAGE</p>
+            <h1>Delete a movie</h1>
+            <p class="muted">Movies with scheduled showtimes cannot be deleted. Remove all showtimes first.</p>
+
+            <form id="delete-movie-form">
+                <label>
+                    Select movie
+                    <select name="movieId" id="delete-movie-select" required>
+                        <option value="">— loading… —</option>
+                    </select>
+                </label>
+
+                <p id="delete-message" class="form-message" role="alert"></p>
+
+                <button class="button button-danger" type="submit">Delete movie</button>
             </form>
         </section>
 
